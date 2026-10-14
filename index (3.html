@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Para ti, Isa ❤️</title>
+
+<style>
+/* =====================================================================
+   ESTILOS — Para ti, Isa
+   Paleta: negro profundo · rojo intenso · carmesí · rosa
+   ===================================================================== */
+:root{
+  --negro:   #000000;
+  --carmesi: #dc143c;
+  --rojo:    #ff1f45;
+  --rosa:    #ff4d8d;
+  --rosa-claro: #ff9fc0;
+  --texto:   #ffffff;
+  /* Tipografías del sistema: funcionan sin internet.
+     Cambia el orden si quieres otra personalidad. */
+  --serif: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+html,body{
+  height:100%;
+  background:var(--negro);
+  color:var(--texto);
+  font-family:var(--serif);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Lienzo de fondo (partículas rojas suaves + corazones diminutos) */
+#bg{
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  z-index:0;
+  pointer-events:none;
+}
+
+/* ---------- Pantallas y transiciones ---------- */
+.screen{
+  position:fixed; inset:0; z-index:1;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center;
+  padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+  opacity:0; visibility:hidden;
+  filter:blur(10px);
+  transform:scale(1.03);
+  transition:opacity .9s ease, filter .9s ease, transform .9s ease, visibility 0s linear .9s;
+}
+.screen.active{
+  opacity:1; visibility:visible;
+  filter:none; transform:none;
+  transition:opacity .9s ease, filter .9s ease, transform .9s ease, visibility 0s linear 0s;
+}
+
+/* ---------- Pantalla 1: título ---------- */
+.titulo{
+  font-weight:400;
+  font-size:clamp(2.1rem, 8.4vw, 4.8rem);
+  letter-spacing:.14em;
+  line-height:1.3;
+  text-shadow:0 0 28px rgba(255,60,110,.45);
+}
+.titulo .palabra{ display:inline-block; white-space:nowrap; }
+.titulo .letra{
+  display:inline-block;
+  opacity:0;
+  transform:translateY(16px);
+  filter:blur(8px);
+  animation:letraEntra 1.2s cubic-bezier(.2,.7,.2,1) forwards;
+  animation-delay:calc(var(--i) * 95ms + 500ms);
+}
+.titulo .isa{ color:var(--rosa-claro); text-shadow:0 0 26px rgba(255,45,111,.75); }
+.titulo .latido{ display:inline-block; animation:latido 1.4s ease-in-out infinite; }
+@keyframes letraEntra{ to{ opacity:1; transform:none; filter:blur(0); } }
+@keyframes latido{
+  0%,100%{ transform:scale(1); }
+  15%{ transform:scale(1.22); }
+  30%{ transform:scale(1); }
+  45%{ transform:scale(1.14); }
+}
+
+/* ---------- Botones ---------- */
+.boton{
+  position:relative;
+  margin-top:clamp(30px, 7vh, 56px);
+  padding:15px 40px;
+  font:inherit; font-size:1.05rem; letter-spacing:.16em;
+  color:var(--texto);
+  background:linear-gradient(135deg, rgba(220,20,60,.28), rgba(255,77,141,.18));
+  border:1px solid rgba(255,105,150,.55);
+  border-radius:999px;
+  cursor:pointer;
+  overflow:hidden;
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  box-shadow:0 0 18px rgba(255,30,80,.25), inset 0 0 12px rgba(255,80,130,.12);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease,
+             background .35s ease, border-color .35s ease, opacity 1s ease;
+}
+/* Brillo que cruza el botón al pasar el cursor */
+.boton::after{
+  content:""; position:absolute; top:0; left:-120%;
+  width:60%; height:100%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.3), transparent);
+  transform:skewX(-20deg);
+  transition:left .7s ease;
+}
+.boton:hover, .boton:focus-visible{
+  transform:translateY(-3px) scale(1.06);
+  border-color:#ff8fb3;
+  background:linear-gradient(135deg, rgba(255,23,68,.55), rgba(255,77,141,.4));
+  box-shadow:0 0 30px rgba(255,40,90,.8), 0 0 80px rgba(255,40,90,.35), inset 0 0 18px rgba(255,110,160,.3);
+  outline:none;
+}
+.boton:hover::after, .boton:focus-visible::after{ left:140%; }
+.boton:active{ transform:scale(.97); }
+
+.boton.entra{ animation:botonEntra 1.2s ease 3s backwards; }
+@keyframes botonEntra{ from{ opacity:0; transform:translateY(14px); } }
+
+/* Botón que aparece más tarde (pantalla 2) */
+.boton.tarde{ opacity:0; pointer-events:none; }
+.boton.tarde.visible{ opacity:1; pointer-events:auto; }
+
+/* ---------- Pantalla 2: mensaje escrito ---------- */
+.mensaje{
+  font-style:italic;
+  font-size:clamp(1.4rem, 4.8vw, 2.5rem);
+  line-height:1.55;
+  letter-spacing:.02em;
+  max-width:min(780px, 88vw);
+  min-height:4.8em;
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  text-shadow:0 0 20px rgba(255,60,110,.35);
+}
+.mensaje .w{ display:inline-block; white-space:nowrap; }
+.mensaje .c{ position:relative; opacity:0; transition:opacity .3s ease; }
+.mensaje .c.on{ opacity:1; }
+.mensaje .c.cur::after{
+  content:""; position:absolute; right:-5px; top:.12em; bottom:.12em; width:2px;
+  background:var(--rosa-claro);
+  box-shadow:0 0 8px var(--rosa);
+  animation:parpadeo 1s steps(1) infinite;
+}
+@keyframes parpadeo{ 50%{ opacity:0; } }
+.mensaje .espacio{ display:inline-block; width:.3em; }
+
+/* ---------- Pantalla 3: corazón ---------- */
+#s3{ padding:0; }
+#corazon{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  touch-action:none;
+  transition:opacity .5s ease;
+}
+.frase{
+  position:absolute; left:0; right:0; margin:0 auto;
+  bottom:calc(11vh + env(safe-area-inset-bottom));
+  padding:0 26px;
+  max-width:660px;
+  font-style:italic;
+  font-size:clamp(1.02rem, 3.5vw, 1.5rem);
+  line-height:1.6;
+  color:#fff;
+  text-shadow:0 0 18px rgba(255,60,110,.55);
+  opacity:0; transform:translateY(14px);
+  transition:opacity 2.2s ease, transform 2.2s ease;
+  pointer-events:none;
+}
+.frase.visible{ opacity:1; transform:none; }
+
+.repetir{
+  position:absolute; left:50%;
+  bottom:calc(16px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  background:none; border:0;
+  font:inherit; font-size:.85rem; letter-spacing:.18em;
+  color:rgba(255,160,190,.55);
+  padding:12px 18px;
+  cursor:pointer;
+  opacity:0; pointer-events:none;
+  transition:opacity 1.6s ease, color .3s ease, text-shadow .3s ease;
+}
+.repetir.visible{ opacity:1; pointer-events:auto; }
+.repetir:hover, .repetir:focus-visible{
+  color:#ffc2d6; text-shadow:0 0 14px rgba(255,80,130,.9); outline:none;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .titulo .latido{ animation:none; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Fondo con partículas (común a todas las pantallas) -->
+<canvas id="bg"></canvas>
+
+<!-- ============ PANTALLA 1 · PARA TI, ISA ============ -->
+<section class="screen active" id="s1">
+  <!-- Edita el texto aquí: las letras se animan solas -->
+  <h1 class="titulo" id="titulo">PARA TI, ISA ❤️</h1>
+  <button class="boton entra" id="btnEmpezar" type="button">Empezar ❤️</button>
+</section>
+
+<!-- ============ PANTALLA 2 · MENSAJE ============ -->
+<section class="screen" id="s2">
+  <!-- Este texto se escribe poco a poco -->
+  <p class="mensaje" id="mensaje">No soy bueno siendo romántico, pero te dejo este corazón.</p>
+  <button class="boton tarde" id="btnSiguiente" type="button">Siguiente ❤️</button>
+</section>
+
+<!-- ============ PANTALLA 3 · EL CORAZÓN ============ -->
+<section class="screen" id="s3">
+  <canvas id="corazon"></canvas>
+  <p class="frase" id="frase">No sé decirlo con las palabras más bonitas, pero quería regalarte algo hecho por mí. ❤️</p>
+  <button class="repetir" id="btnRepetir" type="button">↻ volver a verlo</button>
+</section>
+
+<script>
+/* =====================================================================
+   CONFIGURACIÓN  — cambia estos valores para ajustar la animación
+   ===================================================================== */
+const CONFIG = {
+  // Velocidad de escritura del mensaje (milisegundos por letra)
+  velocidadEscritura: 62,
+
+  // Número de partículas del corazón (se adapta solo si el equipo va lento)
+  particulasEscritorio: 8000,
+  particulasMovil: 5200,
+
+  // Latido
+  periodoLatido: 1.25,      // segundos por latido
+  fuerzaLatido: 0.055,      // cuánto crece el corazón (0.05 = 5 %)
+
+  // Giro suave del corazón (radianes). 0.5 ≈ 28°
+  balanceo: 0.5,
+
+  // Colores de las partículas del corazón [r, g, b] y su peso relativo
+  paleta: [
+    { rgb:[220, 20, 60],  peso:30 },   // carmesí
+    { rgb:[255, 32, 64],  peso:30 },   // rojo intenso
+    { rgb:[255, 45, 120], peso:28 },   // rosa intenso
+    { rgb:[255, 125, 175],peso:12 }    // rosa claro
+  ]
+};
+
+(() => {
+'use strict';
+
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const esMovil = () => Math.min(innerWidth, innerHeight) < 700;
+
+/* Sprite de brillo difuso, dibujado una sola vez en un canvas pequeño.
+   Dibujarlo con drawImage es mucho más rápido que usar sombras. */
+function crearBrillo(r, g, b, tam = 64){
+  const c = document.createElement('canvas');
+  c.width = c.height = tam;
+  const x = c.getContext('2d');
+  const gr = x.createRadialGradient(tam/2, tam/2, 0, tam/2, tam/2, tam/2);
+  gr.addColorStop(0,   `rgba(${r},${g},${b},1)`);
+  gr.addColorStop(.25, `rgba(${r},${g},${b},.55)`);
+  gr.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+  x.fillStyle = gr;
+  x.fillRect(0, 0, tam, tam);
+  return c;
+}
+const brilloRojo   = crearBrillo(255, 30, 70);
+const brilloRosa   = crearBrillo(255, 115, 165);
+const brilloBlanco = crearBrillo(255, 225, 235);
+const brilloAura   = crearBrillo(255, 20, 70, 128);
+
+/* Estado compartido entre el fondo y el corazón */
+const estado = {
+  atenuar: 1,        // 1 = fondo normal · menor = fondo más tenue (pantalla 3)
+  atenuarMeta: 1,
+  corazonesNivel: 0, // opacidad de los corazones diminutos flotantes
+  corazonesMeta: 0
+};
+
+/* =====================================================================
+   1) TÍTULO: las letras aparecen una a una
+   ===================================================================== */
+(function construirTitulo(){
+  const h1 = $('titulo');
+  const texto = h1.textContent.trim();
+  h1.setAttribute('aria-label', texto);
+  h1.textContent = '';
+  let i = 0;
+  texto.split(' ').forEach((palabra, pi, arr) => {
+    const w = document.createElement('span');
+    w.className = 'palabra';
+    w.setAttribute('aria-hidden', 'true');
+    const esIsa = palabra.replace(/[^A-Za-zÁÉÍÓÚÑ]/g, '').toUpperCase() === 'ISA';
+    if (palabra.includes('❤')) {
+      // El emoji se trata como una sola "letra" que además late
+      const l = document.createElement('span');
+      l.className = 'letra';
+      l.style.setProperty('--i', i++);
+      const inner = document.createElement('span');
+      inner.className = 'latido';
+      inner.textContent = palabra;
+      l.appendChild(inner);
+      w.appendChild(l);
+    } else {
+      for (const ch of palabra) {
+        const l = document.createElement('span');
+        l.className = 'letra' + (esIsa ? ' isa' : '');
+        l.style.setProperty('--i', i++);
+        l.textContent = ch;
+        w.appendChild(l);
+      }
+    }
+    h1.appendChild(w);
+    if (pi < arr.length - 1) h1.appendChild(document.createTextNode(' '));
+  });
+})();
+
+/* =====================================================================
+   2) FONDO: partículas rojas que brillan + corazones diminutos
+   ===================================================================== */
+const bg = $('bg');
+const bctx = bg.getContext('2d');
+let BW = 0, BH = 0, bdpr = 1;
+
+function redimensionarFondo(){
+  bdpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  BW = bg.width  = Math.round(innerWidth  * bdpr);
+  BH = bg.height = Math.round(innerHeight * bdpr);
+}
+
+const NUM_FONDO = esMovil() ? 60 : 110;
+const motas = Array.from({ length: NUM_FONDO }, () => ({
+  x: Math.random(), y: Math.random(),
+  r: .6 + Math.random() * 1.8,
+  vy: .004 + Math.random() * .012,      // fracción de alto por segundo
+  vx: (Math.random() - .5) * .004,
+  fase: Math.random() * 6.283,
+  vel: .6 + Math.random() * 1.4,
+  rosa: Math.random() < .25
+}));
+
+// Corazones diminutos que flotan (solo se ven con el corazón formado)
+const NUM_MINI = esMovil() ? 9 : 14;
+const minis = Array.from({ length: NUM_MINI }, () => ({
+  x: Math.random(), y: Math.random() * 1.1,
+  s: 3 + Math.random() * 4,             // medio ancho en px
+  vy: .018 + Math.random() * .028,
+  fase: Math.random() * 6.283,
+  amp: .01 + Math.random() * .015,
+  a: .25 + Math.random() * .35
+}));
+
+function trazoCorazon(c, x, y, s){
+  c.beginPath();
+  c.moveTo(x, y + s * .9);
+  c.bezierCurveTo(x - s*1.6, y - s*.1, x - s*.9, y - s*1.2, x, y - s*.4);
+  c.bezierCurveTo(x + s*.9, y - s*1.2, x + s*1.6, y - s*.1, x, y + s*.9);
+  c.closePath();
+}
+
+let bgUlt = performance.now();
+function bucleFondo(ahora){
+  requestAnimationFrame(bucleFondo);
+  const dt = Math.min((ahora - bgUlt) / 1000, .1);
+  bgUlt = ahora;
+  const t = ahora / 1000;
+
+  estado.atenuar        += (estado.atenuarMeta   - estado.atenuar)        * Math.min(1, dt * 2);
+  estado.corazonesNivel += (estado.corazonesMeta - estado.corazonesNivel) * Math.min(1, dt * 1.2);
+
+  bctx.clearRect(0, 0, BW, BH);
+  bctx.globalCompositeOperation = 'lighter';
+
+  for (const p of motas){
+    p.y -= p.vy * dt;
+    p.x += (p.vx + Math.sin(t * .3 + p.fase) * .0015) * dt;
+    if (p.y < -.02){ p.y = 1.02; p.x = Math.random(); }
+    if (p.x < -.02) p.x = 1.02; else if (p.x > 1.02) p.x = -.02;
+    const tw = .5 + .5 * Math.sin(t * p.vel + p.fase);
+    const tam = p.r * 7 * bdpr;
+    bctx.globalAlpha = (.18 + .6 * tw) * estado.atenuar;
+    bctx.drawImage(p.rosa ? brilloRosa : brilloRojo, p.x*BW - tam/2, p.y*BH - tam/2, tam, tam);
+  }
+
+  if (estado.corazonesNivel > .01){
+    bctx.globalCompositeOperation = 'source-over';
+    for (const m of minis){
+      m.y -= m.vy * dt;
+      if (m.y < -.05){ m.y = 1.05; m.x = Math.random(); }
+      const x = (m.x + Math.sin(t * .6 + m.fase) * m.amp) * BW;
+      const y = m.y * BH;
+      const borde = clamp(Math.min(m.y, 1 - m.y) * 6, 0, 1);   // se desvanecen en los bordes
+      bctx.globalAlpha = m.a * borde * estado.corazonesNivel;
+      bctx.fillStyle = '#ff5d93';
+      trazoCorazon(bctx, x, y, m.s * bdpr);
+      bctx.fill();
+    }
+  }
+  bctx.globalAlpha = 1;
+  bctx.globalCompositeOperation = 'source-over';
+}
+
+/* =====================================================================
+   3) MENSAJE: efecto de escritura
+   ===================================================================== */
+const mensajeEl = $('mensaje');
+const MENSAJE = mensajeEl.textContent.trim();
+let letrasMsg = [];
+let escribiendo = false;
+
+(function construirMensaje(){
+  mensajeEl.setAttribute('aria-label', MENSAJE);
+  mensajeEl.textContent = '';
+  const palabras = MENSAJE.split(' ');
+  palabras.forEach((pal, pi) => {
+    const w = document.createElement('span');
+    w.className = 'w';
+    w.setAttribute('aria-hidden', 'true');
+    for (const ch of pal){
+      const c = document.createElement('span');
+      c.className = 'c';
+      c.textContent = ch;
+      w.appendChild(c);
+      letrasMsg.push(c);
+    }
+    mensajeEl.appendChild(w);
+    if (pi < palabras.length - 1){
+      const e = document.createElement('span');
+      e.className = 'espacio';
+      mensajeEl.appendChild(e);
+      letrasMsg.push(null);               // pausa breve entre palabras
+    }
+  });
+})();
+
+function escribirMensaje(){
+  if (escribiendo) return;
+  escribiendo = true;
+  let i = 0, actual = null;
+  const paso = () => {
+    if (i >= letrasMsg.length){
+      setTimeout(() => { if (actual) actual.classList.remove('cur'); }, 1800);
+      setTimeout(() => $('btnSiguiente').classList.add('visible'), 700);
+      return;
+    }
+    const el = letrasMsg[i++];
+    let espera = CONFIG.velocidadEscritura;
+    if (el){
+      if (actual) actual.classList.remove('cur');
+      el.classList.add('on', 'cur');
+      actual = el;
+      if (el.textContent === ',') espera += 380;        // pausa en la coma
+      espera += Math.random() * 40;                      // ritmo humano
+    }
+    setTimeout(paso, espera);
+  };
+  setTimeout(paso, 900);
+}
+
+/* =====================================================================
+   4) CORAZÓN 3D DE PARTÍCULAS
+   ---------------------------------------------------------------------
+   Forma: superficie implícita de un corazón 3D
+     (x² + 9/4·y² + z² − 1)³ − x²z³ − 9/80·y²z³ = 0
+   (aquí z es el eje vertical y "y" es la profundidad).
+   Para cada partícula se elige una dirección al azar y se busca el
+   borde del corazón en esa dirección; la partícula se coloca entre el
+   centro y el borde, con más densidad cerca de la superficie. Así se
+   obtiene una nube con volumen real.
+   Después cada frame se rota en 3D y se proyecta con perspectiva.
+   ===================================================================== */
+const hc = $('corazon');
+const ctx = hc.getContext('2d');
+let HW = 0, HH = 0, hdpr = 1, S = 100, CX = 0, CY = 0;
+
+function dentro(x, y, z){
+  const a = x*x + 2.25*y*y + z*z - 1;
+  return a*a*a - x*x*z*z*z - 0.1125*y*y*z*z*z < 0;
+}
+
+// Datos de las partículas (arreglos tipados = rápido)
+let N = 0;
+let HX, HV, HD;          // posición final: horizontal, vertical, profundidad
+let SX, SV, SD;          // posición inicial (cerca del centro)
+let DELAY, DUR, TAM, FASE, COL, BRILLA, OX, OY, PX, PY, PS, BI, ORDEN;
+let chispasIdx = [];
+let cuenta = 0;          // cuántas partículas se dibujan (calidad adaptativa)
+
+const NB_COLORES = CONFIG.paleta.length;
+const NB_PROF = 6;
+const NB = NB_COLORES * NB_PROF;
+const ALFA_PROF = [.30, .42, .56, .70, .85, 1];
+const estilos = [];
+CONFIG.paleta.forEach(c => {
+  for (let d = 0; d < NB_PROF; d++){
+    estilos.push(`rgba(${c.rgb[0]},${c.rgb[1]},${c.rgb[2]},${ALFA_PROF[d]})`);
+  }
+});
+
+function construirCorazon(){
+  N = esMovil() ? CONFIG.particulasMovil : CONFIG.particulasEscritorio;
+  HX = new Float32Array(N); HV = new Float32Array(N); HD = new Float32Array(N);
+  SX = new Float32Array(N); SV = new Float32Array(N); SD = new Float32Array(N);
+  DELAY = new Float32Array(N); DUR = new Float32Array(N);
+  TAM = new Float32Array(N); FASE = new Float32Array(N);
+  COL = new Uint8Array(N); BRILLA = new Uint8Array(N);
+  OX = new Float32Array(N); OY = new Float32Array(N);
+  PX = new Float32Array(N); PY = new Float32Array(N); PS = new Float32Array(N);
+  BI = new Uint8Array(N); ORDEN = new Int32Array(N);
+  chispasIdx = [];
+
+  const totalPeso = CONFIG.paleta.reduce((s, c) => s + c.peso, 0);
+
+  for (let i = 0; i < N; i++){
+    // Dirección uniforme sobre la esfera
+    const u = Math.random() * 2 - 1;
+    const ph = Math.random() * Math.PI * 2;
+    const s = Math.sqrt(1 - u*u);
+    const dx = s * Math.cos(ph), dy = s * Math.sin(ph), dz = u;
+
+    // Distancia al borde del corazón en esa dirección
+    const paso = 0.025;
+    let r = 0;
+    while (r < 2.4 && dentro(dx*(r+paso), dy*(r+paso), dz*(r+paso))) r += paso;
+    let lo = r, hi = r + paso;
+    for (let k = 0; k < 6; k++){
+      const m = (lo + hi) / 2;
+      if (dentro(dx*m, dy*m, dz*m)) lo = m; else hi = m;
+    }
+    const R = lo;
+
+    // 55 % cerca de la superficie (silueta definida) · 45 % relleno interior
+    const cascara = Math.random() < .55;
+    const t = cascara ? .9 + .1 * Math.random() : Math.pow(Math.random(), .45);
+
+    HX[i] = dx * R * t;
+    HD[i] = dy * R * t * 1.25;          // un poco más de grosor en profundidad
+    HV[i] = dz * R * t - 0.08;          // centrar verticalmente
+
+    // Punto de partida: pequeña nube en el centro
+    const a1 = Math.random() * 6.283, a2 = Math.random() * 6.283, rr = Math.random() * .12;
+    SX[i] = Math.cos(a1) * rr; SV[i] = Math.sin(a1) * rr; SD[i] = Math.sin(a2) * rr;
+
+    // Las partículas internas aparecen primero → "sale" desde el centro
+    DELAY[i] = .1 + t * 1.1 + Math.random() * .9;
+    DUR[i]   = 1.9 + Math.random() * .8;
+
+    TAM[i] = Math.random() < .08 ? 1.7 + Math.random() * .9 : .8 + Math.random() * .9;
+    FASE[i] = Math.random() * 6.283;
+
+    // Color según los pesos de la paleta
+    let q = Math.random() * totalPeso, ci = 0;
+    for (; ci < NB_COLORES - 1; ci++){ q -= CONFIG.paleta[ci].peso; if (q <= 0) break; }
+    COL[i] = ci;
+
+    if (Math.random() < .012){ BRILLA[i] = 1; chispasIdx.push(i); }
+  }
+  cuenta = N;
+}
+
+function redimensionarCorazon(){
+  hdpr = Math.min(window.devicePixelRatio || 1, 2);
+  HW = hc.width  = Math.round(innerWidth  * hdpr);
+  HH = hc.height = Math.round(innerHeight * hdpr);
+  S  = Math.min(innerWidth * .34, innerHeight * .26) * hdpr;   // tamaño del corazón
+  CX = HW / 2;
+  CY = HH * .40;                                                // deja sitio a la frase
+}
+
+/* Puntero: ratón o dedo */
+const ptr = { x: 0, y: 0, activo: false, nx: 0, ny: 0 };
+function moverPuntero(e){
+  const r = hc.getBoundingClientRect();
+  ptr.x = (e.clientX - r.left) * hdpr;
+  ptr.y = (e.clientY - r.top) * hdpr;
+  ptr.nx = clamp((e.clientX / innerWidth  - .5) * 2, -1, 1);
+  ptr.ny = clamp((e.clientY / innerHeight - .5) * 2, -1, 1);
+  ptr.activo = true;
+}
+hc.addEventListener('pointermove', moverPuntero);
+hc.addEventListener('pointerdown', moverPuntero);
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+  hc.addEventListener(ev, () => { ptr.activo = false; ptr.nx *= .0; ptr.ny *= .0; }));
+
+/* Latido: doble pulso tipo "lub-dub" */
+function latido(ph){
+  const a = ph < .1 ? ph / .1 : Math.exp(-(ph - .1) * 7);
+  const b = .5 * Math.exp(-Math.pow((ph - .33) / .06, 2));
+  return Math.min(1.15, a + b);
+}
+
+/* Destellos sueltos alrededor del corazón */
+const NUM_DESTELLOS = esMovil() ? 10 : 16;
+const destellos = Array.from({ length: NUM_DESTELLOS }, () => ({ nacido: 0, vida: 1, ang: 0, rad: 1, tam: 1 }));
+function reiniciarDestello(d, t, inicial){
+  d.nacido = t + (inicial ? Math.random() * 3 : 0);
+  d.vida = 1.6 + Math.random() * 2.2;
+  d.ang = Math.random() * 6.283;
+  d.rad = 1.12 + Math.random() * .75;
+  d.tam = .6 + Math.random() * .8;
+}
+
+let corRun = false, corT0 = 0, corUlt = 0, formado = false, repitiendo = false;
+let sumaDt = 0, nDt = 0, rotSuave = 0, tiltSuave = 0;
+const bStart = new Int32Array(NB + 1);
+const bCursor = new Int32Array(NB);
+const CAM = 4.2;
+
+function marcoCorazon(ahora){
+  if (!corRun) return;
+  requestAnimationFrame(marcoCorazon);
+
+  const dt = Math.min(ahora - corUlt, 100);
+  corUlt = ahora;
+  const t = (ahora - corT0) / 1000;
+
+  // Calidad adaptativa: si va lento, dibuja menos partículas
+  if (t > 1.2){
+    sumaDt += dt; nDt++;
+    if (nDt === 45){
+      if (sumaDt / nDt > 26 && cuenta > N * .35) cuenta = Math.floor(cuenta * .82);
+      sumaDt = 0; nDt = 0;
+    }
+  }
+
+  const form = clamp(t / 4.5, 0, 1);
+  const k = clamp((t - 1.5) / 2, 0, 1);                       // el latido entra poco a poco
+  const ph = (t % CONFIG.periodoLatido) / CONFIG.periodoLatido;
+  const pulso = latido(ph) * k;
+  const escala = 1 + CONFIG.fuerzaLatido * pulso + .012 * Math.sin(t * 1.1) * k;
+
+  // Rotación 3D suave + reacción al puntero
+  const angObj = Math.sin(t * .45) * CONFIG.balanceo + (ptr.activo ? ptr.nx * .35 : 0);
+  const tiltObj = Math.sin(t * .3) * .08 + (ptr.activo ? ptr.ny * .2 : 0);
+  rotSuave  += (angObj  - rotSuave)  * .05;
+  tiltSuave += (tiltObj - tiltSuave) * .05;
+  const cA = Math.cos(rotSuave),  sA = Math.sin(rotSuave);
+  const cB = Math.cos(tiltSuave), sB = Math.sin(tiltSuave);
+
+  ctx.clearRect(0, 0, HW, HH);
+  ctx.globalCompositeOperation = 'lighter';
+
+  // Aura roja detrás del corazón (late con él)
+  const aura = S * 4.4;
+  ctx.globalAlpha = (.10 + .10 * pulso) * form;
+  ctx.drawImage(brilloAura, CX - aura/2, CY - aura/2, aura, aura);
+
+  // ---- Calcular posición de cada partícula ----
+  const R = S * .45, R2 = R * R;
+  const conteo = new Int32Array(NB);
+  for (let i = 0; i < cuenta; i++){
+    let p = (t - DELAY[i]) / DUR[i];
+    if (p <= 0){ BI[i] = 255; continue; }
+    if (p > 1) p = 1;
+    const e = 1 - (1 - p) * (1 - p) * (1 - p);                // easeOutCubic
+    const burst = Math.sin(p * Math.PI) * .16;                // se expanden y se asientan
+
+    let x = SX[i] + (HX[i] - SX[i]) * e + HX[i] * burst;
+    let v = SV[i] + (HV[i] - SV[i]) * e + HV[i] * burst;
+    let d = SD[i] + (HD[i] - SD[i]) * e + HD[i] * burst;
+    if (p >= 1){                                               // respiración orgánica
+      const w = Math.sin(t * 1.3 + FASE[i]) * .007;
+      x += w; v += w; d += w;
+    }
+    x *= escala; v *= escala; d *= escala;
+
+    // Rotación alrededor del eje vertical y ligera inclinación
+    const rx = x * cA + d * sA;
+    const rd = -x * sA + d * cA;
+    const ry = v * cB - rd * sB;
+    const rz = v * sB + rd * cB;
+
+    // Perspectiva
+    const f = CAM / (CAM - rz);
+    const sx = CX + rx * f * S;
+    const sy = CY - ry * f * S;
+
+    // Reacción sutil al cursor / dedo: las partículas se apartan
+    let tx = 0, ty = 0;
+    if (ptr.activo){
+      const ddx = sx - ptr.x, ddy = sy - ptr.y;
+      const d2 = ddx*ddx + ddy*ddy;
+      if (d2 < R2 && d2 > .01){
+        const dist = Math.sqrt(d2);
+        const q = 1 - dist / R;
+        const empuje = q * q * S * .30;
+        tx = ddx / dist * empuje; ty = ddy / dist * empuje;
+      }
+    }
+    OX[i] += (tx - OX[i]) * .14;
+    OY[i] += (ty - OY[i]) * .14;
+
+    PX[i] = sx + OX[i];
+    PY[i] = sy + OY[i];
+    PS[i] = Math.max(.9 * hdpr, TAM[i] * hdpr * f * Math.min(1, p * 3));
+
+    // Profundidad → cubo de color (las de atrás más oscuras = sombras)
+    const dn = clamp((rz + .95) / 1.9, 0, .999);
+    const b = COL[i] * NB_PROF + ((dn * NB_PROF) | 0);
+    BI[i] = b;
+    conteo[b]++;
+  }
+
+  // ---- Ordenar por cubo (conteo) y dibujar cada cubo en una sola pasada ----
+  bStart[0] = 0;
+  for (let b = 0; b < NB; b++){ bStart[b+1] = bStart[b] + conteo[b]; bCursor[b] = bStart[b]; }
+  for (let i = 0; i < cuenta; i++){
+    const b = BI[i];
+    if (b !== 255) ORDEN[bCursor[b]++] = i;
+  }
+  ctx.globalAlpha = 1;
+  for (let b = 0; b < NB; b++){
+    const a = bStart[b], z = bStart[b+1];
+    if (a === z) continue;
+    ctx.fillStyle = estilos[b];
+    ctx.beginPath();
+    for (let q = a; q < z; q++){
+      const i = ORDEN[q], s = PS[i];
+      ctx.rect(PX[i] - s * .5, PY[i] - s * .5, s, s);
+    }
+    ctx.fill();
+  }
+
+  // ---- Destellos sutiles dentro del corazón ----
+  for (let q = 0; q < chispasIdx.length; q++){
+    const i = chispasIdx[q];
+    if (i >= cuenta || BI[i] === 255 || t < DELAY[i] + DUR[i] * .6) continue;
+    const tw = Math.pow(Math.max(0, Math.sin(t * 2.4 + FASE[i] * 3)), 6);
+    if (tw < .05) continue;
+    const g = (14 + 16 * tw) * hdpr;
+    ctx.globalAlpha = tw * .9;
+    ctx.drawImage(brilloBlanco, PX[i] - g/2, PY[i] - g/2, g, g);
+  }
+
+  // ---- Destellos grandes alrededor ----
+  const aparece = clamp((t - 2.5) / 2, 0, 1);
+  if (aparece > 0){
+    for (const d of destellos){
+      const fr = (t - d.nacido) / d.vida;
+      if (fr < 0) continue;
+      if (fr > 1){ reiniciarDestello(d, t, false); continue; }
+      const al = Math.pow(Math.sin(fr * Math.PI), 2) * aparece;
+      const x = CX + Math.cos(d.ang) * d.rad * S * 1.1;
+      const y = CY - Math.sin(d.ang) * d.rad * S;
+      const g = 26 * d.tam * hdpr;
+      ctx.globalAlpha = al * .8;
+      ctx.drawImage(brilloRosa, x - g/2, y - g/2, g, g);
+      // pequeña cruz de luz
+      const L = 7 * d.tam * hdpr * (.6 + al);
+      ctx.globalAlpha = al * .85;
+      ctx.strokeStyle = 'rgb(255,215,230)';
+      ctx.lineWidth = Math.max(1, hdpr * .8);
+      ctx.beginPath();
+      ctx.moveTo(x - L, y); ctx.lineTo(x + L, y);
+      ctx.moveTo(x, y - L); ctx.lineTo(x, y + L);
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Cuando termina de formarse: frase, botón y corazones flotantes
+  if (!formado && t > 4.6){
+    formado = true;
+    $('frase').classList.add('visible');
+    $('btnRepetir').classList.add('visible');
+    estado.corazonesMeta = 1;
+  }
+}
+
+function iniciarCorazon(){
+  if (!N) construirCorazon();
+  redimensionarCorazon();
+  cuenta = Math.max(cuenta, Math.floor(N * .6));   // reinicia calidad razonable
+  cuenta = N;
+  destellos.forEach(d => reiniciarDestello(d, 0, true));
+  rotSuave = 0; tiltSuave = 0; sumaDt = 0; nDt = 0;
+  formado = false;
+  estado.atenuarMeta = .4;
+  corT0 = performance.now();
+  corUlt = corT0;
+  if (!corRun){ corRun = true; requestAnimationFrame(marcoCorazon); }
+}
+
+/* =====================================================================
+   5) NAVEGACIÓN ENTRE PANTALLAS
+   ===================================================================== */
+const s1 = $('s1'), s2 = $('s2'), s3 = $('s3');
+let ocupado = false;
+
+function irA(desde, hasta, alLlegar){
+  if (ocupado) return;
+  ocupado = true;
+  desde.classList.remove('active');
+  setTimeout(() => {
+    hasta.classList.add('active');
+    if (alLlegar) alLlegar();
+    ocupado = false;
+  }, 750);
+}
+
+$('btnEmpezar').addEventListener('click', () => irA(s1, s2, escribirMensaje));
+$('btnSiguiente').addEventListener('click', () => irA(s2, s3, iniciarCorazon));
+
+/* Botón discreto: repetir la animación del corazón */
+$('btnRepetir').addEventListener('click', () => {
+  if (repitiendo) return;
+  repitiendo = true;
+  $('frase').classList.remove('visible');
+  $('btnRepetir').classList.remove('visible');
+  estado.corazonesMeta = 0;
+  hc.style.opacity = 0;                      // se desvanece y vuelve a empezar
+  setTimeout(() => {
+    corT0 = performance.now();
+    formado = false;
+    rotSuave = 0; tiltSuave = 0;
+    cuenta = N;
+    destellos.forEach(d => reiniciarDestello(d, 0, true));
+    hc.style.opacity = 1;
+    repitiendo = false;
+  }, 600);
+});
+
+/* =====================================================================
+   6) ARRANQUE
+   ===================================================================== */
+function redimensionar(){
+  redimensionarFondo();
+  redimensionarCorazon();
+}
+window.addEventListener('resize', redimensionar);
+window.addEventListener('orientationchange', () => setTimeout(redimensionar, 250));
+
+redimensionar();
+construirCorazon();               // se precalcula para que no haya tirones al pulsar "Siguiente"
+requestAnimationFrame(bucleFondo);
+})();
+</script>
+</body>
+</html>
